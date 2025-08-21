@@ -1,43 +1,42 @@
 // src/components/Header.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
 import { UserCircleIcon, Bars3Icon } from "@heroicons/react/24/solid";
 
 const Header = ({ onToggleSidebar, user }) => {
   const navigate = useNavigate();
 
   return (
-    // Header should be fixed to the top, spanning full width
-    <header className="flex-shrink-0 bg-gray-900 text-white p-4 flex items-center justify-between shadow-md z-20 w-full">
-      <div className="flex items-center">
+    <header className="flex-shrink-0 bg-gray-900 text-gray-100 p-4 flex items-center justify-between shadow-xl z-20 w-full animate-fade-in-up">
+      <div className="flex items-center space-x-4">
         {/* Sidebar Toggle Button */}
         <button
           onClick={onToggleSidebar}
-          className="p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-4"
+          className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-light transition-all duration-300 ease-in-out"
           aria-label="Toggle Sidebar"
         >
           <Bars3Icon className="w-6 h-6" />
         </button>
-        {/* Main application title */}
-        <span className="text-xl font-semibold">InterviewSIM</span>
+
+        {/* App Title */}
+        <span className="text-2xl font-bold font-mono text-gray-50">
+          Interview<span className="text-brand">SIM</span>
+        </span>
       </div>
-      <div className="flex items-center">
+
+      <div className="flex items-center space-x-2">
         {user ? (
-          <>
-            {/* Removed "Welcome, Vir Law" text from here */}
-            <button
-              onClick={() => navigate("/dashboard/profile")}
-              className="p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="User Profile"
-            >
-              <UserCircleIcon className="w-6 h-6" />
-            </button>
-          </>
+          <button
+            onClick={() => navigate("/dashboard/profile")}
+            className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-light transition-all duration-300 ease-in-out"
+            aria-label="User Profile"
+          >
+            <UserCircleIcon className="w-7 h-7" />
+          </button>
         ) : (
           <button
             onClick={() => navigate("/signin")}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm"
+            className="bg-brand hover:bg-brand-dark text-white font-medium py-2 px-6 rounded-full text-sm shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
           >
             Sign In
           </button>
