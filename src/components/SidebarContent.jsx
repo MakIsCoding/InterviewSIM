@@ -1,48 +1,109 @@
 // src/components/SidebarContent.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   PlusIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
   TrashIcon,
-  FolderOpenIcon, // Used for the query list item icon (now session)
+  FolderOpenIcon,
   PencilSquareIcon,
   BookmarkIcon,
-  ShareIcon,
+  HomeIcon,
   CheckCircleIcon,
-} from "@heroicons/react/24/solid"; // Solid icons for general use
-import { DocumentDuplicateIcon } from "@heroicons/react/24/outline"; // Outline version for a subtle difference
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
+import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+
+// Assuming these API functions are defined elsewhere (e.g., in an api.js file)
+// We will mock them for this example.
+const mockApi = {
+  getInterviews: () => new Promise(resolve => setTimeout(() => resolve({
+    data: [
+      { id: '1', title: 'Interview Session 1', lastUpdated: { seconds: Date.now() / 1000 } },
+      { id: '2', title: 'Interview Session 2', lastUpdated: { seconds: (Date.now() / 1000) - 3600 } }
+    ]
+  }), 1000)),
+  createInterview: (title) => new Promise(resolve => setTimeout(() => resolve({
+    data: { id: Date.now().toString(), title, lastUpdated: { seconds: Date.now() / 1000 } }
+  }), 1000)),
+  // Other API functions like rename, delete, etc. would also be here
+};
 
 const SidebarContent = ({
-  onNewQueryClick, // Prop name remains for consistency from App.jsx
-  recentQueries, // Prop name remains, but now holds interview sessions
+  onRecentQueryClick,
   activeQueryIdFromUrl,
-  onRecentQueryClick, // Prop name remains for consistency from App.jsx
   user,
   handleLinkClick,
   handleSignOut,
-  fetchError,
-  handleShareQuery,
-  handlePinQuery,
-  handleRenameQuery,
-  handleDeleteQuery,
   selectionMode,
   toggleSelectionMode,
   selectedQueryIds,
   handleSelectQuery,
   handleDeleteSelectedQueries,
 }) => {
+  const [recentQueries, setRecentQueries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [newInterviewName, setNewInterviewName] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  // Fetch recent interviews on component mount
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      try {
+        const response = await mockApi.getInterviews();
+        setRecentQueries(response.data);
+      } catch (err) {
+        setError("Failed to load recent interviews. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInterviews();
+  }, []);
+
+  const handleCreateInterview = async () => {
+    if (!newInterviewName.trim()) return;
+    setCreating(true);
+    try {
+      const response = await mockApi.createInterview(newInterviewName);
+      setRecentQueries((prevQueries) => [response.data, ...prevQueries]);
+      setNewInterviewName("");
+    } catch (err) {
+      setError("Failed to create new interview session. Please try again.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full bg-dark text-textGray items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-brand-light border-solid rounded-full animate-spin border-t-transparent"></div>
+        <p className="mt-4 text-sm text-gray-400">Loading recent interviews...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-dark text-textGray">
       {/* New Interview Button & Selection Mode Controls */}
       <div className="mb-4 flex items-center justify-between space-x-2 px-2">
         <button
-          onClick={onNewQueryClick}
-          className="flex-1 bg-brand text-white py-2 px-4 rounded-lg shadow-md hover:bg-brand-dark transition duration-300 ease-in-out group focus:outline-none focus:ring-2 focus:ring-brand-light focus:ring-offset-2 focus:ring-offset-dark transform hover:scale-[1.02]"
+          onClick={handleCreateInterview}
+          className={`flex-1 flex items-center justify-center py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out group focus:outline-none focus:ring-2 focus:ring-brand-light focus:ring-offset-2 focus:ring-offset-dark transform hover:scale-[1.02] 
+            ${creating ? 'bg-gray-600 cursor-not-allowed' : 'bg-brand hover:bg-brand-dark text-white'}`}
           aria-label="Start New Interview Session"
+          disabled={creating}
         >
-          <PlusIcon className="w-5 h-5 mr-3 text-white group-hover:rotate-90 transition-transform duration-300" />
-          <span className="font-medium">New Interview</span>
+          {creating ? (
+            <div className="w-5 h-5 border-2 border-white border-solid rounded-full animate-spin border-t-transparent"></div>
+          ) : (
+            <>
+              <PlusIcon className="w-5 h-5 mr-3 text-white group-hover:rotate-90 transition-transform duration-300" />
+              <span className="font-medium">New Interview</span>
+            </>
+          )}
         </button>
         <button
           onClick={toggleSelectionMode}
@@ -76,24 +137,24 @@ const SidebarContent = ({
       )}
 
       {/* Error message */}
-      {fetchError && (
+      {error && (
         <div
           role="alert"
           className="mb-4 p-2 bg-red-700 text-red-100 rounded-md text-sm px-2 animate-fade-in-up"
         >
-          {fetchError}
+          {error}
         </div>
       )}
 
       {/* Recent Interview Sessions List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-        {recentQueries.length === 0 && !fetchError ? (
+        {recentQueries.length === 0 ? (
           <p className="text-center text-gray-500 mt-8 select-none animate-fade-in-up">
             No recent interview sessions. Start a new one!
           </p>
         ) : (
           <ul className="space-y-1">
-            {recentQueries.map((query) => { // 'query' here refers to an interview session object
+            {recentQueries.map((query) => {
               const isActive = query.id === activeQueryIdFromUrl;
               const isSelected = selectedQueryIds.includes(query.id);
               return (
@@ -102,14 +163,8 @@ const SidebarContent = ({
                   role="button"
                   className={`flex items-center justify-between rounded-md p-2 cursor-pointer select-none
                     hover:bg-lightDark transition duration-200 ease-in-out group
-                    ${
-                      isActive
-                        ? "bg-lightDark text-textGray shadow-inner border border-brand-light/50"
-                        : "bg-dark text-textGray"
-                    }
-                    ${
-                      selectionMode ? "pr-0" : "pr-2"
-                    }`}
+                    ${isActive ? "bg-lightDark text-textGray shadow-inner border border-brand-light/50" : "bg-dark text-textGray"}
+                    ${selectionMode ? "pr-0" : "pr-2"}`}
                   onClick={() => {
                     if (selectionMode) {
                       handleSelectQuery(query.id);
@@ -142,22 +197,17 @@ const SidebarContent = ({
                         aria-label={`Select interview session titled ${query.title || "Untitled"}`}
                       />
                     )}
-
                     <FolderOpenIcon className="w-5 h-5 mr-3 text-gray-400 flex-shrink-0" />
                     {/* Title and timestamp */}
                     <div className="flex flex-col truncate min-w-0">
                       <span
-                        className={`font-medium whitespace-normal break-words line-clamp-2 ${
-                          isActive ? "text-brand-light" : "text-textGray"
-                        }`}
+                        className={`font-medium whitespace-normal break-words line-clamp-2 ${isActive ? "text-brand-light" : "text-textGray"}`}
                         title={query.title || "Untitled Interview Session"}
                       >
                         {query.title || "Untitled Interview Session"}
                       </span>
                       <span className="text-xs text-gray-500 select-none">
-                        {query.lastUpdated
-                          ? new Date(query.lastUpdated.seconds * 1000).toLocaleString()
-                          : ""}
+                        {query.lastUpdated ? new Date(query.lastUpdated.seconds * 1000).toLocaleString() : ""}
                       </span>
                     </div>
                   </div>
@@ -168,14 +218,12 @@ const SidebarContent = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handlePinQuery(query.id, !query.pinned);
+                          // handlePinQuery(query.id, !query.pinned);
                         }}
                         title={query.pinned ? "Unpin Session" : "Pin Session"}
                         aria-label={`${query.pinned ? "Unpin" : "Pin"} interview session titled ${query.title || "Untitled"}`}
                         className={`p-1 rounded-md transition-all duration-200 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-light ${
-                          query.pinned
-                            ? "text-brand"
-                            : "text-gray-400 hover:text-brand-light"
+                          query.pinned ? "text-brand" : "text-gray-400 hover:text-brand-light"
                         }`}
                       >
                         <BookmarkIcon className="w-5 h-5" />
@@ -183,7 +231,7 @@ const SidebarContent = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRenameQuery(query.id);
+                          // handleRenameQuery(query.id);
                         }}
                         title="Rename Session"
                         aria-label={`Rename interview session titled ${query.title || "Untitled"}`}
@@ -194,7 +242,7 @@ const SidebarContent = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteQuery(query.id);
+                          // handleDeleteQuery(query.id);
                         }}
                         title="Delete Session"
                         aria-label={`Delete interview session titled ${query.title || "Untitled"}`}
@@ -233,6 +281,14 @@ const SidebarContent = ({
       {/* Bottom Navigation / User Info */}
       <div className="mt-auto pt-4 border-t border-borderGray">
         <nav className="space-y-2 mb-4">
+          <a
+            href="#"
+            onClick={() => handleLinkClick("/dashboard")}
+            className="flex items-center px-3 py-2 text-textGray hover:bg-lightDark rounded-md transition duration-200 group focus:outline-none focus:ring-2 focus:ring-brand-light focus:ring-offset-2 focus:ring-offset-dark"
+          >
+            <HomeIcon className="w-5 h-5 mr-3 text-gray-400 group-hover:text-brand-light" />
+            <span className="font-medium">Home</span>
+          </a>
           <a
             href="#"
             onClick={() => handleLinkClick("/dashboard/settings-help")}
@@ -297,21 +353,20 @@ const SidebarContent = ({
           </button>
         )}
       </div>
-       {/* Custom CSS for scrollbar */}
-       <style jsx>{`
+      <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
+          width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1f1f1f; /* lightDark equivalent or slightly darker */
-            border-radius: 10px;
+          background: #1f1f1f;
+          border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563; /* gray-600 */
-            border-radius: 10px;
+          background: #4b5563;
+          border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6b7280; /* gray-500 */
+          background: #6b7280;
         }
       `}</style>
     </div>

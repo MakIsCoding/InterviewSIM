@@ -1,3 +1,4 @@
+// src/components/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import {
   collection,
@@ -16,14 +17,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
 import SidebarContent from "./SidebarContent";
-import { auth, db } from "../firebase"; // Adjust import paths as necessary
-import ROUTES from "../routes.js"; // Your app routes config
+import { auth, db } from "../firebase";
+import ROUTES from "../routes.js";
 
 const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPathSegments = location.pathname.split("/");
-  const activeQueryIdFromUrl = currentPathSegments[currentPathSegments.length - 1];
+  const activeQueryIdFromUrl =
+    currentPathSegments[currentPathSegments.length - 1];
 
   const currentUserId = user?.uid;
 
@@ -33,7 +35,7 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedQueryIds, setSelectedQueryIds] = useState([]);
 
-  // Fetch user queries with real-time updates, ordered by pinned then lastUpdated
+  // Fetch user interview sessions with real-time updates, ordered by pinned then lastUpdated
   useEffect(() => {
     if (!currentUserId) {
       setRecentQueries([]);
@@ -41,10 +43,10 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
       return;
     }
 
-    const userQuerySessionsRef = collection(db, "users", currentUserId, "querySessions");
+    const userInterviewSessionsRef = collection(db, "users", currentUserId, "interviewSessions");
 
     const q = query(
-      userQuerySessionsRef,
+      userInterviewSessionsRef,
       orderBy("pinned", "desc"),
       orderBy("lastUpdated", "desc")
     );
@@ -52,29 +54,29 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const queriesData = snapshot.docs.map((doc) => ({
+        const sessionsData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setRecentQueries(queriesData);
+        setRecentQueries(sessionsData);
         setFetchError(null);
       },
       (error) => {
-        console.error("Error fetching recent queries:", error);
-        setFetchError("Failed to load recent queries.");
+        console.error("Error fetching recent interview sessions:", error);
+        setFetchError("Failed to load recent interview sessions.");
       }
     );
 
     return () => unsubscribe();
-  }, [currentUserId]);
+  }, [currentUserId, db]);
 
   // Toggle selection mode for multi-select actions
   const toggleSelectionMode = () => {
     setSelectionMode((prev) => !prev);
-    setSelectedQueryIds([]);
+    setSelectedQueryIds([]); // Clear selection when toggling mode
   };
 
-  // Select or deselect a query in multi-selection mode
+  // Select or deselect a query (interview session) in multi-selection mode
   const handleSelectQuery = (queryId) => {
     setSelectedQueryIds((prevSelected) =>
       prevSelected.includes(queryId)
@@ -90,7 +92,7 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
       navigate(ROUTES.SIGN_IN);
     } catch (error) {
       console.error("Error signing out:", error);
-      alert("Failed to sign out. Please try again.");
+      console.error("Failed to sign out. Please try again.");
     }
   };
 
@@ -102,10 +104,10 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
     }
   };
 
-  // Create new query session and navigate there
+  // Create new interview session and navigate there
   const handleNewQueryClick = async () => {
     if (!currentUserId) {
-      console.error("No user authenticated to create a new query.");
+      console.error("No user authenticated to create a new interview session.");
       navigate(ROUTES.SIGN_IN);
       return;
     }
@@ -115,9 +117,9 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
 
     try {
       const newSessionRef = await addDoc(
-        collection(db, "users", currentUserId, "querySessions"),
+        collection(db, "users", currentUserId, "interviewSessions"),
         {
-          title: "New Chat",
+          title: "New Interview",
           createdAt: serverTimestamp(),
           lastUpdated: serverTimestamp(),
           pinned: false,
@@ -125,8 +127,8 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
       );
       navigate(`/dashboard/${newSessionRef.id}`);
     } catch (error) {
-      console.error("Error creating new query session:", error);
-      alert("Failed to start a new chat. Please try again.");
+      console.error("Error creating new interview session:", error);
+      console.error("Failed to start a new interview. Please try again.");
     }
 
     if (window.innerWidth < 768) {
@@ -134,7 +136,7 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
     }
   };
 
-  // Navigate to selected query session (unless in selection mode)
+  // Navigate to selected interview session (unless in selection mode)
   const handleRecentQueryClick = (queryId) => {
     if (!selectionMode) {
       navigate(`/dashboard/${queryId}`);
@@ -146,18 +148,18 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
 
   // Placeholder share handler (to be implemented)
   const handleShareQuery = (queryId) => {
-    alert(`Share functionality for query ${queryId} is not yet implemented.`);
+    console.log(`Share functionality for interview session ${queryId} is not yet implemented.`);
   };
 
-  // Pin or unpin a query session
+  // Pin or unpin an interview session
   const handlePinQuery = async (queryId, setPinnedTo) => {
     if (!currentUserId) {
-      alert("Please sign in to pin queries.");
+      console.error("Please sign in to pin interview sessions.");
       return;
     }
 
     try {
-      const queryRef = doc(db, "users", currentUserId, "querySessions", queryId);
+      const queryRef = doc(db, "users", currentUserId, "interviewSessions", queryId);
       const currentQuery = recentQueries.find((q) => q.id === queryId);
       const newPinnedStatus =
         setPinnedTo !== undefined
@@ -171,102 +173,101 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
         lastUpdated: serverTimestamp(),
       });
 
-      alert(
-        `${currentQuery?.title || "Untitled Query"} ${
+      console.log(
+        `${currentQuery?.title || "Untitled Interview"} ${
           newPinnedStatus ? "pinned" : "unpinned"
         } successfully!`
       );
     } catch (error) {
-      console.error("Error pinning/unpinning query:", error);
-      alert("Failed to pin/unpin query. Please try again.");
+      console.error("Error pinning/unpinning interview session:", error);
+      console.error("Failed to pin/unpin interview session. Please try again.");
     }
   };
 
-  // Rename query with prompt input
+  // Rename interview session with prompt input
   const handleRenameQuery = async (queryId) => {
     if (!currentUserId) {
-      alert("Please sign in to rename queries.");
+      console.error("Please sign in to rename interview sessions.");
       return;
     }
     const currentQuery = recentQueries.find((q) => q.id === queryId);
-    const oldTitle = currentQuery?.title || "Untitled Query";
-    const newTitle = prompt("Enter new title for the query:", oldTitle);
+    const oldTitle = currentQuery?.title || "Untitled Interview";
+    const newTitle = window.prompt("Enter new title for the interview session:", oldTitle);
 
     if (newTitle !== null) {
       const trimmedTitle = newTitle.trim();
       if (trimmedTitle === "") {
-        alert("Query title cannot be empty.");
+        console.error("Interview session title cannot be empty.");
       } else if (trimmedTitle === oldTitle) {
-        alert("No change, title is the same.");
+        console.log("No change, title is the same.");
       } else {
         try {
-          const queryRef = doc(db, "users", currentUserId, "querySessions", queryId);
+          const queryRef = doc(db, "users", currentUserId, "interviewSessions", queryId);
           await updateDoc(queryRef, {
             title: trimmedTitle,
             lastUpdated: serverTimestamp(),
           });
-          alert("Query renamed successfully!");
+          console.log("Interview session renamed successfully!");
         } catch (error) {
-          console.error("Error renaming query:", error);
-          alert("Failed to rename query. Please try again.");
+          console.error("Error renaming interview session:", error);
+          console.error("Failed to rename interview session. Please try again.");
         }
       }
     }
-    // If newTitle is null, user cancelled prompt - do nothing
   };
 
-  // Delete single query session with confirmation
+  // Delete single interview session with confirmation
   const handleDeleteQuery = async (queryId) => {
     if (!currentUserId) {
-      alert("Please sign in to delete queries.");
+      console.error("Please sign in to delete interview sessions.");
       return;
     }
 
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this query session? This action cannot be undone."
+      "Are you sure you want to delete this interview session? This action cannot be undone."
     );
 
     if (confirmDelete) {
       try {
-        await deleteDoc(doc(db, "users", currentUserId, "querySessions", queryId));
-        alert("Query deleted successfully!");
+        await deleteDoc(doc(db, "users", currentUserId, "interviewSessions", queryId));
+        console.log("Interview session deleted successfully!");
         if (`/dashboard/${queryId}` === location.pathname) {
           navigate(ROUTES.DASHBOARD);
         }
       } catch (error) {
-        console.error("Error deleting query:", error);
-        alert("Failed to delete query. Please try again.");
+        console.error("Error deleting interview session:", error);
+        console.error("Failed to delete interview session. Please try again.");
       }
     }
   };
 
-  // Delete multiple selected queries in batch with confirmation
+  // Delete multiple selected interview sessions in batch with confirmation
   const handleDeleteSelectedQueries = async () => {
     if (!currentUserId) {
-      alert("Please sign in to delete queries.");
+      console.error("Please sign in to delete interview sessions.");
       return;
     }
 
     if (selectedQueryIds.length === 0) {
-      alert("No queries selected for deletion.");
+      console.warn("No interview sessions selected for deletion.");
       return;
     }
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${selectedQueryIds.length} selected query session(s)? This action cannot be undone.`
+      `Are you sure you want to delete ${selectedQueryIds.length} selected interview session(s)? This action cannot be undone.`
     );
 
     if (confirmDelete) {
       try {
         const batch = writeBatch(db);
         selectedQueryIds.forEach((queryId) => {
-          const queryRef = doc(db, "users", currentUserId, "querySessions", queryId);
+          const queryRef = doc(db, "users", currentUserId, "interviewSessions", queryId);
           batch.delete(queryRef);
         });
 
         await batch.commit();
 
-        alert(`${selectedQueryIds.length} query session(s) deleted successfully!`);
+        console.log(`${selectedQueryIds.length} interview session(s) deleted successfully!`);
         setSelectedQueryIds([]);
         setSelectionMode(false);
 
@@ -274,9 +275,9 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
           navigate(ROUTES.DASHBOARD);
         }
       } catch (error) {
-        console.error("Error deleting selected queries:", error);
-        setFetchError("Failed to delete selected queries.");
-        alert("Failed to delete selected queries. Please try again.");
+        console.error("Error deleting selected interview sessions:", error);
+        setFetchError("Failed to delete selected interview sessions.");
+        console.error("Failed to delete selected interview sessions. Please try again.");
       }
     }
   };
@@ -307,21 +308,21 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
       {/* Mobile Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 w-64 bg-dark text-textGray p-4 flex-col z-40 h-screen
-          transition-transform duration-300 ease-in-out
+          fixed inset-y-0 left-0 w-64 bg-dark text-textGray p-4 flex flex-col z-40 h-screen top-16
+          transition-transform duration-300 ease-in-out shadow-xl md:hidden
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          md:hidden
-          ${!isSidebarOpen ? "pointer-events-none" : ""}
         `}
         aria-hidden={!isSidebarOpen}
         role="dialog"
         aria-label="Sidebar Navigation"
       >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold select-none">InterviewSIM</h1>
+          <h1 className="text-2xl font-bold select-none text-brand-light">
+            Interview<span className="text-accentOrange">SIM</span>
+          </h1>
           <button
             onClick={onToggleSidebar}
-            className="p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accentOrange"
+            className="p-2 rounded-full text-textGray hover:bg-lightDark focus:outline-none focus:ring-2 focus:ring-brand-light transition duration-200"
             aria-label="Close Sidebar"
           >
             <XMarkIcon className="w-6 h-6" />
@@ -334,7 +335,7 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
       <div
         className={`
           hidden md:flex flex-shrink-0 bg-dark text-textGray p-4 flex-col z-10 h-screen
-          transition-all duration-300 ease-in-out
+          transition-all duration-300 ease-in-out shadow-xl
           ${isSidebarOpen ? "w-64" : "w-0 overflow-hidden"}
         `}
         aria-hidden={!isSidebarOpen}
@@ -344,7 +345,9 @@ const Sidebar = ({ isSidebarOpen, onToggleSidebar, user }) => {
         {isSidebarOpen && (
           <>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold select-none">InterviewSIM</h1>
+              <h1 className="text-2xl font-bold select-none text-brand-light">
+                Interview<span className="text-accentOrange">SIM</span>
+              </h1>
             </div>
             <SidebarContent {...sidebarContentProps} />
           </>

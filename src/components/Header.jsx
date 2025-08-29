@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { UserCircleIcon, Bars3Icon } from "@heroicons/react/24/solid";
@@ -7,7 +6,7 @@ const Header = ({ onToggleSidebar, user }) => {
   const navigate = useNavigate();
 
   return (
-    <header className="flex-shrink-0 bg-gray-900 text-gray-100 p-4 flex items-center justify-between shadow-xl z-20 w-full animate-fade-in-up">
+    <header className="flex-shrink-0 bg-dark text-gray-100 p-4 flex items-center justify-between shadow-xl z-20 w-full animate-fade-in-up">
       <div className="flex items-center space-x-4">
         {/* Sidebar Toggle Button */}
         <button

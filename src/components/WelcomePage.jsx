@@ -1,69 +1,75 @@
 // src/components/WelcomePage.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRightIcon, Cog6ToothIcon, FolderOpenIcon, PlusIcon } from "@heroicons/react/24/solid"; // Importing relevant icons
 
 const WelcomePage = () => {
   const navigate = useNavigate();
 
-  const handleNewQueryClick = () => {
-    navigate("/dashboard/new");
-  };
-
-  const handleSettingsHelpClick = () => {
-    navigate("/dashboard/settings-help");
-  };
-
-  // Function to handle the "Get Started" button click
-  const handleGetStartedClick = () => {
-    navigate("/dashboard/new"); // Directs to the New Query page
-  };
+  const handleNewQueryClick = () => navigate("/dashboard/new"); // Function name remains consistent
+  const handleSettingsHelpClick = () => navigate("/dashboard/settings-help");
+  const handleGetStartedClick = () => navigate("/dashboard/new"); // Same as handleNewQueryClick for direct start
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-gray-100 p-6">
-      <div className="max-w-3xl text-center">
-        {" "}
-        {/* This div ensures its content is centered */}
-        <h1 className="text-4xl font-bold text-blue-300 mb-6">
-          Welcome to InterviewSIM!
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-dark via-gray-900 to-dark px-6 py-12 text-white relative overflow-hidden">
+      {/* Background Flair with Brand Colors */}
+      <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-brand opacity-15 rounded-full blur-[100px] z-0 animate-fade-in-up delay-100"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-72 h-72 bg-brand-dark opacity-10 rounded-full blur-[120px] z-0 animate-fade-in-up delay-200"></div>
+      <div className="absolute top-[20%] right-[5%] w-48 h-48 bg-brand-light opacity-8 rounded-full blur-[90px] z-0 animate-fade-in-up delay-300"></div>
+
+      {/* Main content with modern styling */}
+      <div className="z-10 max-w-4xl text-center px-4 py-8 bg-lightDark rounded-2xl shadow-2xl border border-borderGray animate-fade-in-up">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight text-white drop-shadow-lg">
+          Welcome to <span className="text-brand">InterviewSIM</span>
         </h1>
-        <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-          Your intelligent legal assistant is here to help you navigate the
-          complexities of law. Start a new query or review your past cases from
-          the sidebar.
+        <p className="text-lg sm:text-xl text-textGray mb-10 leading-relaxed font-light">
+          Your intelligent interview assistant is here to guide you through interview scenarios. {/* Changed text */}
+          Start a new interview or revisit past sessions anytime. {/* Changed text */}
         </p>
-        {/* Moved "Get Started" button here to be directly under the main text,
-            inheriting the text-center from its parent div. */}
+
         <button
           onClick={handleGetStartedClick}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-xl transition duration-300 ease-in-out mb-10 shadow-lg transform hover:scale-105"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-12 rounded-full text-lg sm:text-xl transition-all duration-300 shadow-xl hover:shadow-blue-glow transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-lightDark flex items-center justify-center mx-auto"
+          aria-label="Get Started with InterviewSIM"
         >
+          <ArrowRightIcon className="w-6 h-6 mr-3 text-white" />
           Get Started
         </button>
-        <div className="space-y-4 mb-10 text-left w-full sm:w-3/4 mx-auto">
-          <p className="text-gray-200">
-            <span className="font-semibold text-blue-300">New Query:</span>{" "}
-            Click "New Query" in the sidebar to start a fresh discussion.
+
+        <div className="mt-16 space-y-8 text-left w-full sm:w-11/12 md:w-5/6 mx-auto">
+          <p className="text-textGray text-base sm:text-lg flex items-start">
+            <PlusIcon className="w-6 h-6 text-brand mr-4 mt-1 flex-shrink-0" />
+            <div>
+              <span className="font-semibold text-white block mb-1">New Interview:</span> {/* Changed text */}
+              <span>Click <strong className="text-brand-light">“New Interview”</strong> in the sidebar to begin a fresh interview session.</span> {/* Changed text */}
+            </div>
           </p>
-          <p className="text-gray-200">
-            <span className="font-semibold text-blue-300">Recent Cases:</span>{" "}
-            Your previous interactions will appear under "Recent Cases" for
-            quick access.
+          <p className="text-textGray text-base sm:text-lg flex items-start">
+            <FolderOpenIcon className="w-6 h-6 text-brand mr-4 mt-1 flex-shrink-0" />
+            <div>
+              <span className="font-semibold text-white block mb-1">Past Interviews:</span> {/* Changed text */}
+              <span>Easily access your previous interview sessions, neatly organized under <strong className="text-brand-light">“Past Interviews”</strong> in the sidebar.</span> {/* Changed text */}
+            </div>
           </p>
-          <p className="text-gray-200">
-            <span className="font-semibold text-blue-300">
-              Settings & Help:
-            </span>{" "}
-            Find options and support here.
-            <button
-              onClick={handleSettingsHelpClick}
-              className="ml-2 text-blue-400 hover:underline focus:outline-none"
-            >
-              (Go to Settings & Help)
-            </button>
+          <p className="text-textGray text-base sm:text-lg flex items-start">
+            <Cog6ToothIcon className="w-6 h-6 text-brand mr-4 mt-1 flex-shrink-0" />
+            <div>
+              <span className="font-semibold text-white block mb-1">Settings & Help:</span>
+              <span>Manage your preferences and find quick answers anytime.
+              <button
+                onClick={handleSettingsHelpClick}
+                className="ml-0 sm:ml-2 text-brand-light hover:underline font-medium transition-colors duration-200 inline-flex items-center mt-2 sm:mt-0"
+                aria-label="Go to Settings and Help page"
+              >
+                Go to Settings & Help <ArrowRightIcon className="w-4 h-4 ml-1" />
+              </button>
+              </span>
+            </div>
           </p>
         </div>
-        <p className="text-gray-400 text-sm mt-8">
-        InterviewSIM is currently in beta. Your feedback helps us improve!
+
+        <p className="text-sm text-gray-500 mt-12 italic font-mono">
+          InterviewSIM is currently in beta — your feedback shapes the future.
         </p>
       </div>
     </div>
